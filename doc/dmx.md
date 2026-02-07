@@ -1,0 +1,101 @@
+# DMX modules
+
+The DMX modules allow you to send DMX data to lighting fixtures in real life, from CV signals in your modular synth patch.
+
+![](dmx-different-chain-2.png)
+
+## Requirements
+
+- An USB -> DMX OUT adapter.
+  - I'm using the ENTTEC Open DMX USB adapter. I'm saying that only as an example of what works, I'm not affiliated with ENTTEC in any way.
+- Any DMX fixture, connected to the adapter by DMX cables. I mean, that's the purpose of the module, so if you're reading this you probably have at least one lighting fixture laying around somewhere in your field of view right now, and which you want to be controlled.
+- You'll need to install and configure the proper drivers and framework which are supposed to work with your adapter on your operating system. Currently, the modules are only supporting the [OLA framework](https://www.openlighting.org/ola/) (Open Lighting Architecture)
+  - Follow the instructions [here](dmx-configure.md) for installing and configuring OLA on your computer.
+- Some hope that your computer will allow you to make it all work.
+
+## Starting
+
+The DMX adapter should be plugged in, and the OLA framework running, _before_ starting VCV Rack.
+
+## Basics
+
+Start with one _DMX OUT 1_ module. It has an input port, an address display and a blackout section.
+
+![](dmx-out-1-module.png "DMX OUT 1")
+
+You can configure the DMX address of the module by right-clicking it and modifying the "DMX Address" field.
+
+You can also select the DMX universe you want the data to be sent to. For now, all DMX modules on the rack will send data to the same DMX universe.
+
+Send a CV signal to the DMX input:
+
+![](dmx-send-value.png)
+
+The module will send a DMX signal to the address you selected, with the value received by the input.
+
+More precisely, the module will:
+  - take a 0-10V CV signal as an input
+  - transform it to a value between 0 and 255 (0V transformed to the value 0, and 10V to the value 255)
+  - emit a DMX signal of 512 channels through the adapter to the fixtures that are connected to it
+  - the selected address with contain the calculated value, the rest of the channels will have the value 0.
+
+The module displays its DMX channel under the value input.
+
+## Chaining modules
+
+One handy thing with the DMX protocol is that lighting fixtures often use several consecutive channels, starting at their assigned DMX address, to control separate parameters of the same fixture. The DMX modules are conceived for that use and allow you to send values to consecutive DMX channels, by chaining several modules together:
+
+![](dmx-chain.png "Chained")
+
+The base address will be the address assigned to the first (leftmost) module. Each additional module (directly on the right and touching) will have a channel of +1 relative to the previous module.
+
+If you want a module to have its own DMX address (i.e. different than incrementing the previous one) while still being right aside another DMX module, you can check the "Use own DMX address" option in its menu, and assign an address to it. The modules on the right side of this module will follow its address incrementally.
+
+![](dmx-use-own-address.png)
+
+Here we have two module chains, the first one starting at address 10 (own address of leftmost module) with 3 modules following it (getting channels 11 to 13), and then a second chain starting at address 20 (own address of that module) followed by three other modules (getting channels 21 to 23):
+
+![](dmx-two-chains.png "Two chains")
+
+Another example with three chains:
+
+![](dmx-three-chains.png "Three chains")
+
+Each module displays the DMX channel it's sending data to ; if the module uses its own address (not depending on the other modules), the address display is emphasized.
+
+If a DMX module has no DMX module touching its left side, its "Use own DMX address" option will be automatically checked, and not able to be unchecked.
+
+## Blackout
+
+On each module there is a blackout button, and a blackout input. When the blackout button is pushed (or when the blackout input receives a gate or trigger signal), the module sends a blackout signal (0 on every channel) through the DMX adapter, and puts the module in "blackout triggered" state. In that state, a red LED lights up on the module.
+
+![](dmx-black-out.png)
+
+When a blackout has been triggered on a module, it stays in the "blackout triggered" state, and it prevents sending any other signal to the DMX adapter. If there are other modules anywhere on the rack, none of them will send their values.
+
+When you've put the signals in an acceptable state and are ready to start again, just uncheck the "Blackout triggered" item in the right-click menu.
+
+## Other DMX modules
+
+There are also _DMX OUT 2_ and _DMX OUT 4_ with which you can send up to respectively 2 and 4 CV signals to consecutive DMX channels, on the same module:
+
+![](dmx-modules.png "DMX Modules")
+
+Here the first module will be able to send to channel 001 ; the second one to 010 and 011, and the third one to 020, 021, 022 and 023. A tooltip on each input indicates the channel it sends the signal to.
+
+Of course you can chain them together and they will have consecutive addresses, taking into account the number of inputs of each module.
+The chain mechanism works with all those DMX modules:
+
+![](dmx-different-chain-1.png)
+
+Notice how the channel of each module corresponds to (the own address of previous module + number of channels of previous module).
+
+## Why a DMX module for VCV Rack?
+
+A bunch of rich and complex computer software already exist for commanding DMX lighting. They can be synchronized with music and programmed to do basically anything. I'm not inventing anything actually new here.
+
+What i wanted to do is giving a way for people to command DMX lighting specifically from a modular synthetizer software. People who create music with modular synth deserve to be able to synchronize their lighting system too.
+
+## Show your work!
+
+If you use those modules, and doing a lightshow commanded by VCV, please send me a video of what you've achieved (qualiatouch@proton.me), i'm eager to see what people will do with them!

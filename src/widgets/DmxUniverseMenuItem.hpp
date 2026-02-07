@@ -1,0 +1,23 @@
+#pragma once
+#include "../plugin.hpp"
+#include "../modules/AbstractDmxModule.hpp"
+
+using namespace std;
+
+using namespace rack;
+
+struct DmxUniverseField : ui::TextField {
+    AbstractDmxModule* module;
+
+    DmxUniverseField(AbstractDmxModule* moduleParam);
+
+    void onSelectKey(const event::SelectKey& event) override;
+};
+
+struct DmxUniverseMenuItem : ui::MenuItem {
+    AbstractDmxModule* module;
+
+    DmxUniverseMenuItem(AbstractDmxModule* moduleParam);
+
+    Menu* createChildMenu() override;
+};

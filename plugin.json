@@ -1,0 +1,47 @@
+{
+  "slug": "QualiaLight",
+  "name": "QualiaLight",
+  "version": "2.0.0",
+  "license": "GPL-3.0-or-later",
+  "brand": "QualiaTouch",
+  "description": "QualiaLight is a plugin allowing to command real-life DMX fixtures with CV signals. QualiaLight is part of the QualiaTouch project. QualiaTouch is about giving the machine perception and action capabilities with the outside world.",
+  "author": "Qualia Touch",
+  "authorEmail": "qualiatouch@proton.me",
+  "pluginUrl": "https://github.com/qualiatouch/qualialight-plugin/blob/master/Readme.md",
+  "authorUrl": "",
+  "manualUrl": "https://github.com/qualiatouch/qualialight-plugin/blob/master/Readme.md",
+  "sourceUrl": "https://github.com/qualiatouch/qualialight-plugin",
+  "changelogUrl": "",
+  "modules": [
+    {
+      "slug": "DmxOut1",
+      "name": "DMX OUT 1",
+      "description": "Send DMX data to one channel",
+      "manualUrl": "https://github.com/qualiatouch/qualialight-plugin/blob/master/doc/dmx.md",
+      "tags": [
+        "External"
+      ],
+      "keywords": "dmx dmx512 light lighting artnet"
+    },
+    {
+      "slug": "DmxOut2",
+      "name": "DMX OUT 2",
+      "description": "Send DMX data to two consecutive channels",
+      "manualUrl": "https://github.com/qualiatouch/qualialight-plugin/blob/master/doc/dmx.md",
+      "tags": [
+        "External"
+      ],
+      "keywords": "dmx dmx512 light lighting artnet"
+    },
+    {
+      "slug": "DmxOut4",
+      "name": "DMX OUT 4",
+      "description": "Send DMX data to 4 consecutive channels",
+      "manualUrl": "https://github.com/qualiatouch/qualialight-plugin/blob/master/doc/dmx.md",
+      "tags": [
+        "External"
+      ],
+      "keywords": "dmx dmx512 light lighting artnet"
+    }
+  ]
+}
