@@ -14,20 +14,23 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 SOURCES += $(call rwildcard,src,*.cpp)
 
 # OLA libraries (Linux only)
-ifdef ARCH_LIN
+#ifdef ARCH_LIN
   CXXFLAGS += -Idep/ola/include
 
   OBJECTS += dep/ola/lib/libola.a
   OBJECTS += dep/ola/lib/libolacommon.a
-  OBJECTS += dep/ola/lib/libolaproto.a
+  # OBJECTS += dep/ola/lib/libolaproto.a
+  OBJECTS += dep/ola/lib/libprotobuf.a
+  OBJECTS += dep/ola/lib/libuuid.a
 
   # System libraries that OLA depends on
-  LDFLAGS += -lprotobuf -lpthread
+  # LDFLAGS += -lprotobuf -luuid -lpthread
+  LDFLAGS += -lpthread
 
   # Tell the build system these need to be built first
   # DEPS += $(OBJECTS)
   DEPS += dep/ola/lib/libola.a
-endif
+#endif
 
 # Add files to the ZIP package when running `make dist`
 # The compiled plugin and "plugin.json" are automatically added.
@@ -39,25 +42,27 @@ DISTRIBUTABLES += $(wildcard README*)
 include $(RACK_DIR)/plugin.mk
 
 # Build recipe for OLA (runs inside Docker container)
-ifdef ARCH_LIN
-dep/ola/lib/libola.a dep/ola/lib/libolacommon.a dep/ola/lib/libolaproto.a:
+#ifdef ARCH_LIN
+dep/ola/lib/libola.a:
 	# Install build dependencies
 	sudo apt-get update
-	sudo apt-get install \
+	sudo apt-get install -y \
 		autoconf \
 		automake \
 		libtool \
 		libprotobuf-dev \
 		protobuf-compiler \
+		libprotoc-dev \
 		pkg-config \
 		libcppunit-dev \
 		bison \
-		flex
+		flex \
+		uuid-dev
 	# Clone and build OLA
 	mkdir -p dep
-	cd dep && git clone --depth 1 --branch 0.10.9 https://github.com/OpenLightingProject/ola.git ola-src
+	cd dep && git clone --depth 1 --branch master https://github.com/OpenLightingProject/ola.git ola-src
 	cd dep/ola-src && autoreconf -fi
-	cd dep/ola-src && ./configure \
+	cd dep/ola-src && CXX="g++ -std=c++11" ./configure \
 		--disable-all-plugins \
 		--disable-osc \
 		--disable-uart \
@@ -67,7 +72,16 @@ dep/ola/lib/libola.a dep/ola/lib/libolacommon.a dep/ola/lib/libolaproto.a:
 		--disable-examples \
 		--disable-unittests \
 		--enable-rdm-tests=no \
+		--disable-shared --enable-static \
 		--prefix=$(abspath dep/ola)
 	cd dep/ola-src && $(MAKE) -j$(shell nproc)
 	cd dep/ola-src && $(MAKE) install
-endif
+	# Copy system static libraries into dep so toolchain can find them
+	mkdir -p dep/ola/lib
+	cp /usr/lib/x86_64-linux-gnu/libprotobuf.a dep/ola/lib/ || true
+	cp /usr/lib/x86_64-linux-gnu/libuuid.a dep/ola/lib/ || true
+
+dep/ola/lib/libolacommon.a: dep/ola/lib/libola.a
+#dep/ola/lib/libolaproto.a: dep/ola/lib/libola.a
+
+#endif
