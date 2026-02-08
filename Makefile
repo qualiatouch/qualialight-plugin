@@ -20,7 +20,7 @@ SOURCES += $(call rwildcard,src,*.cpp)
   OBJECTS += dep/ola/lib/libola.a
   OBJECTS += dep/ola/lib/libolacommon.a
   # OBJECTS += dep/ola/lib/libolaproto.a
-  OBJECTS += dep/ola/lib/libprotobuf.a
+  OBJECTS += dep/protobuf/lib/libprotobuf.a
   OBJECTS += dep/ola/lib/libuuid.a
 
   # System libraries that OLA depends on
@@ -57,12 +57,32 @@ dep/ola/lib/libola.a:
 		libcppunit-dev \
 		bison \
 		flex \
-		uuid-dev
-	# Clone and build OLA
+		uuid-dev \
+		wget \
+		unzip \
+
 	mkdir -p dep
+
+	cd dep && wget -q https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.21.12.tar.gz
+	cd dep && tar xzf v3.21.12.tar.gz
+	mkdir -p dep/protobuf-3.21.12/build
+	cd dep/protobuf-3.21.12/build && cmake ../cmake \
+		-DCMAKE_CXX_FLAGS="-fPIC -std=c++11" \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-Dprotobuf_BUILD_TESTS=OFF \
+		-Dprotobuf_BUILD_SHARED_LIBS=OFF \
+		-DCMAKE_INSTALL_PREFIX=$(abspath dep/protobuf)
+	cd dep/protobuf-3.21.12/build && $(MAKE) -j$(shell nproc)
+	cd dep/protobuf-3.21.12/build && $(MAKE) install
+	# "Protobuf installed, checking..."
+	ls -la dep/protobuf/lib/libprotobuf.a
+
+	# Build OLA with our protobuf
 	cd dep && git clone --depth 1 --branch master https://github.com/OpenLightingProject/ola.git ola-src
 	cd dep/ola-src && autoreconf -fi
 	cd dep/ola-src && CXX="g++ -std=c++11" ./configure \
+		PKG_CONFIG_PATH=$(abspath dep/protobuf/lib/pkgconfig) \
+		CXXFLAGS="-fPIC" \
 		--disable-all-plugins \
 		--disable-osc \
 		--disable-uart \
@@ -75,13 +95,26 @@ dep/ola/lib/libola.a:
 		--disable-shared --enable-static \
 		--prefix=$(abspath dep/ola)
 	cd dep/ola-src && $(MAKE) -j$(shell nproc)
+	# cd dep/ola-src && $(MAKE) check
 	cd dep/ola-src && $(MAKE) install
-	# Copy system static libraries into dep so toolchain can find them
+	whoami
+	cd dep/ola-src && sudo ldconfig
+
+	# Copy system libs
 	mkdir -p dep/ola/lib
-	cp /usr/lib/x86_64-linux-gnu/libprotobuf.a dep/ola/lib/ || true
-	cp /usr/lib/x86_64-linux-gnu/libuuid.a dep/ola/lib/ || true
+	cp /usr/lib/x86_64-linux-gnu/libuuid.a dep/ola/lib/ || \
+		cp /lib/x86_64-linux-gnu/libuuid.a dep/ola/lib/
 
 dep/ola/lib/libolacommon.a: dep/ola/lib/libola.a
 #dep/ola/lib/libolaproto.a: dep/ola/lib/libola.a
+# 	# Build protobuf with -fPIC
+# 	cd dep && wget https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.21.12.tar.gz
+# 	cd dep && tar xzf v3.21.12.tar.gz
+# 	cd dep/protobuf-3.21.12 && ./configure \
+# 		CXXFLAGS="-fPIC -std=c++11" \
+# 		--disable-shared --enable-static \
+# 		--prefix=$(abspath dep/protobuf)
+# 	cd dep/protobuf-3.21.12 && $(MAKE) -j$(shell nproc)
+# 	cd dep/protobuf-3.21.12 && $(MAKE) install
 
 #endif
